@@ -10,6 +10,7 @@ const UserSchema = new Schema({
     id: {
         type: String,
         required: true,
+        unique: true,
     },
 
     password: {
@@ -19,6 +20,7 @@ const UserSchema = new Schema({
     refreshToken: {
         type: String,
         require: false,
+        default: null,
     },
     id_type: {
         type: String,

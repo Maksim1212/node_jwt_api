@@ -41,8 +41,6 @@ async function isAuthJWT(req, res, next) {
     return res.status(200);
 }
 
-
-
 module.exports = {
     isAuthJWT,
 };

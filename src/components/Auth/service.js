@@ -8,8 +8,12 @@ const AuthUserModel = require('../Auth/model');
  * @summary find user
  * @returns {Promise<void>}
  */
-function findUser(email) {
-    return AuthUserModel.findOne({ email }).exec();
+function findUser(id) {
+    return AuthUserModel.findOne({ id }).exec();
+}
+
+function findById(_id) {
+    return AuthUserModel.findById({ _id }).exec();
 }
 
 /**
@@ -99,8 +103,9 @@ function getUserByRefreshToken(refreshToken) {
 function deleteUserById(_id) {
     return AuthUserModel.deleteOne({ _id }).exec();
 }
+
 module.exports = {
-    // register,
+    findById,
     createUser,
     findUser,
     getAccesToken,

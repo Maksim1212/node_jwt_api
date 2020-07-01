@@ -1,3 +1,4 @@
+/* eslint-disable no-else-return */
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -13,7 +14,7 @@ const wrongPassword = 'Wrong Password';
 const saltRounds = 10;
 
 async function getJWTTokens(user) {
-    const accessToken = jwt.sign({ user }, process.env.JWT_Access_Secret_KEY, { expiresIn: 5 });
+    const accessToken = jwt.sign({ user }, process.env.JWT_Access_Secret_KEY, { expiresIn: 500 });
     const refreshToken = jwt.sign({}, process.env.JWT_Refresh_Secret_KEY, { expiresIn: '2d' });
 
     await AuthUserService.updateRefreshToken(user, refreshToken);
@@ -40,8 +41,6 @@ async function createUser(req, res, next) {
             req.body.id_type = 'email';
             req.body.id = req.body.email;
             delete req.body.email;
-        } else {
-            throw Error;
         }
         const { error } = AuthUserValidation.createUser(req.body);
         if (error) {
@@ -50,18 +49,21 @@ async function createUser(req, res, next) {
 
         req.body.password = await bcrypt.hash(req.body.password, saltRounds);
         await AuthUserService.createUser(req.body);
+        const user = await AuthUserService.findUser(req.body.email);
+        const token = await getJWTTokens(user);
         return res.status(200).json({
-            message: 'ok',
+            token: token.accessToken,
         });
     } catch (error) {
-        console.log(error);
         if (error instanceof ValidationError) {
-            req.flash('error', error.message);
-            return res.status(422);
+            return res.status(422).json({
+                error: error.message,
+            });
         }
         if (error.name === 'MongoError') {
-            req.flash('error', { message: dbError });
-            return res.status(422);
+            return res.status(422).json({
+                error: error.errmsg,
+            });
         }
         return next(error);
     }
@@ -74,38 +76,21 @@ async function createUser(req, res, next) {
  * @param {express.NextFunction} next
  * @returns {Promise<void>}
  */
-function loginPage(req, res, next) {
+async function signin(req, res, next) {
     try {
-        return res.status(200).json({
-            message: 'nice',
-        });
-    } catch (error) {
-        req.flash('error', { message: defaultError });
-        return next(error);
-    }
-}
-
-/**
- * @function
- * @param {express.Request} req
- * @param {express.Response} res
- * @param {express.NextFunction} next
- * @returns {Promise<void>}
- */
-async function login(req, res, next) {
-    try {
-        const { error } = AuthUserValidation.login(req.body);
+        const { error } = AuthUserValidation.signin(req.body);
 
         if (error) {
             throw new ValidationError(error.details);
         }
 
-        const user = await AuthUserService.findUser(req.body.email);
+        const user = await AuthUserService.findUser(req.body.id);
         if (!user) {
             req.flash('error', { message: userNotFound });
 
-            res.status(401).redirect('/v1/auth/login/');
-            return res;
+            return res.status(401).json({
+                message: userNotFound,
+            });
         }
         if (!error && user) {
             const reqPassword = req.body.password;
@@ -113,30 +98,51 @@ async function login(req, res, next) {
             const passwordsMatch = await bcrypt.compare(reqPassword, userPassword);
             if (!passwordsMatch) {
                 req.flash('error', { message: wrongPassword });
-                return res.redirect('/v1/auth/login/');
+                return res.status(403).json({
+                    message: wrongPassword,
+                });
             }
-            const token = await getJWTTokens(user.id);
+            const token = await getJWTTokens(user);
             let data = {};
             data = {
                 ...getUserMainFields(user),
                 token,
             };
             req.session.user = data;
-            return res.redirect('/v1/users/');
+            return res.status(200).json({
+                token: token.accessToken,
+            });
         }
         return res.status(200);
     } catch (error) {
         if (error instanceof ValidationError) {
-            req.flash('error', error.message);
-            return res.redirect('/v1/auth/login/');
+            return res.status(401).json({
+                error: error.message,
+            });
         }
 
         if (error.name === 'MongoError') {
-            console.log(req.flash('error', { message: defaultError }));
-            return res.redirect('/v1/auth/login/');
+            return res.status(401).json({
+                error: defaultError,
+            });
         }
-
         return next(error);
+    }
+}
+
+async function info(req, res, next) {
+    if (req.session.user) {
+        let id = req.session.user._id;
+        const userInfo = await AuthUserService.findById(id);
+        console.log(userInfo);
+        return res.status(200).json({
+            user_id: userInfo.id,
+            id_type: userInfo.id_type,
+        });
+    } else {
+        return res.status(200).json({
+            message: 'signin to your account',
+        });
     }
 }
 
@@ -157,16 +163,6 @@ async function logout(req, res, next) {
         req.flash('error', { message: defaultError });
         return next(error);
     }
-}
-
-/**
- * @function
- * @param {express.Request} req
- * @param {express.Response} res
- * @returns {Promise < void >}
- */
-function anauthorized(req, res) {
-    return res.render('401.ejs');
 }
 
 /**
@@ -200,13 +196,11 @@ async function deleteById(req, res, next) {
     }
 }
 
-
 module.exports = {
     createUser,
-    loginPage,
     logout,
-    login,
+    signin,
     getJWTTokens,
-    anauthorized,
     deleteById,
+    info,
 };

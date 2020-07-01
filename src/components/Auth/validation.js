@@ -11,7 +11,11 @@ class AuthUserValidation extends Validation {
     createUser(profile) {
         return this.Joi
             .object({
-                id: this.Joi.string().required(),
+                id: this.Joi
+                    .string()
+                    .min(3)
+                    .max(35)
+                    .required(),
                 password: this.Joi
                     .string()
                     .min(5)
@@ -34,10 +38,10 @@ class AuthUserValidation extends Validation {
      * @memberof AuthUserValidation
      */
 
-    login(data) {
+    signin(data) {
         return this.Joi
             .object({
-                email: this.Joi.string().email().required(),
+                id: this.Joi.string().required(),
                 password: this.Joi.string().required(),
                 _csrf: this.Joi.string(),
             })

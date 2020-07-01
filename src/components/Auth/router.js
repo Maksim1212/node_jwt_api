@@ -13,24 +13,14 @@ const csrfProtection = csrf({ cookie: true });
 const authUserRouter = Router();
 
 /**
- * Route get user login page
- * @name /v1/auth/login
+ * Route post user signin action
+ * @name /signin
  * @function
  * @inner
  * @param {string} path - Express path
  * @param {callback} middleware - Express middleware.
  */
-authUserRouter.get('/login', csrfProtection, AuthUserComponent.loginPage);
-
-/**
- * Route post user login action
- * @name /v1/auth/login
- * @function
- * @inner
- * @param {string} path - Express path
- * @param {callback} middleware - Express middleware.
- */
-authUserRouter.post('/login', csrfProtection, AuthUserComponent.login);
+authUserRouter.post('/signin', AuthUserComponent.signin);
 
 /**
  * Route get user logout action
@@ -42,15 +32,6 @@ authUserRouter.post('/login', csrfProtection, AuthUserComponent.login);
  */
 authUserRouter.get('/logout', AuthUserComponent.logout);
 
-/**
- * Route get not authorized user 401 page
- * @name /v1/auth/401
- * @function
- * @inner
- * @param {string} path - Express path
- * @param {callback} middleware - Express middleware.
- */
-authUserRouter.get('/401', AuthUserComponent.anauthorized);
 
 /**
  * Route post create new user
@@ -61,6 +42,8 @@ authUserRouter.get('/401', AuthUserComponent.anauthorized);
  * @param {callback} middleware - Express middleware.
  */
 authUserRouter.post('/signup', AuthUserComponent.createUser);
+
+authUserRouter.get('/info', AuthUserComponent.info);
 
 authUserRouter.delete('/delete', csrfProtection, AuthUserComponent.deleteById);
 /**
