@@ -98,7 +98,7 @@ async function signin(req, res, next) {
             const passwordsMatch = await bcrypt.compare(reqPassword, userPassword);
             if (!passwordsMatch) {
                 req.flash('error', { message: wrongPassword });
-                return res.status(403).json({
+                return res.status(401).json({
                     message: wrongPassword,
                 });
             }
@@ -178,8 +178,8 @@ async function logout(req, res) {
             });
         }
     } catch (error) {
-        return res.status(500).json({
-            status: 500,
+        return res.status(400).json({
+            status: 400,
             message: error.message,
         });
     }
