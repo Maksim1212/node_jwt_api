@@ -42,6 +42,10 @@ function logout(_id, refreshToken) {
     return AuthUserModel.updateOne({ _id }, { refreshToken }).exec();
 }
 
+function logoutAll(refreshToken) {
+    return AuthUserModel.updateMany({ refreshToken }).exec();
+}
+
 /**
  * Create new user
  * @exports
@@ -111,6 +115,7 @@ module.exports = {
     getAccesToken,
     login,
     logout,
+    logoutAll,
     updateRefreshToken,
     getUserByRefreshToken,
     deleteUserById,

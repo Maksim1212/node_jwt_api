@@ -14,7 +14,10 @@ const { getJWTTokens } = require('../components/Auth/index');
  */
 async function isAuthJWT(req, res, next) {
     if (!req.session.user) {
-        return res.redirect('/v1/auth/401/');
+        return res.status(401).json({
+            status: 401,
+            message: 'signin to your account',
+        });
     }
     let token = req.session.user.token.accessToken;
     const tokens = await getJWTTokens(req.session.user.id);
@@ -28,10 +31,16 @@ async function isAuthJWT(req, res, next) {
             token = req.session.user.token.accessToken;
             decoded = jwt.verify(token, process.env.JWT_Access_Secret_KEY);
             if (!user) {
-                return res.redirect('/v1/auth/401/');
+                return res.status(401).json({
+                    status: 401,
+                    message: error.message,
+                });
             }
         } else {
-            return res.redirect('/v1/auth/403/');
+            return res.status(403).json({
+                status: 403,
+                message: error.message,
+            });
         }
     }
     const currentTime = Math.floor(Date.now() / 1000);

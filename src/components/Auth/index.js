@@ -8,15 +8,14 @@ const AuthUserValidation = require('../Auth/validation');
 const ValidationError = require('../../error/ValidationError');
 const { getUserMainFields } = require('../../helpers/user');
 
-const dbError = 'MongoError: E11000 duplicate key error collection';
 const defaultError = 'An error has occurred';
 const userNotFound = 'This Email not found';
 const wrongPassword = 'Wrong Password';
 const saltRounds = 10;
 
 async function getJWTTokens(user) {
-    const accessToken = jwt.sign({ user }, process.env.JWT_Access_Secret_KEY, { expiresIn: 500 });
-    const refreshToken = jwt.sign({}, process.env.JWT_Refresh_Secret_KEY, { expiresIn: '2d' });
+    const accessToken = jwt.sign({ user }, process.env.JWT_Access_Secret_KEY, { expiresIn: 300 });
+    const refreshToken = jwt.sign({}, process.env.JWT_Refresh_Secret_KEY, { expiresIn: '600' });
 
     await AuthUserService.updateRefreshToken(user, refreshToken);
     return {
@@ -131,11 +130,11 @@ async function signin(req, res, next) {
     }
 }
 
-async function info(req, res, next) {
+async function info(req, res) {
     if (req.session.user) {
         let id = req.session.user._id;
         const userInfo = await AuthUserService.findById(id);
-        console.log(userInfo);
+        await getJWTTokens(req.session.user);
         return res.status(200).json({
             user_id: userInfo.id,
             id_type: userInfo.id_type,
@@ -154,15 +153,28 @@ async function info(req, res, next) {
  * @param {express.NextFunction} next
  * @returns {Promise < void >}
  */
-async function logout(req, res, next) {
+async function logout(req, res) {
     try {
-        console.log('logout');
-        await AuthUserService.logout(req.session.user['_id']);
-        delete req.session.user;
-        return res.status(200).redirect('/v1/auth/login');
+        if (req.query.all === 'true') {
+            const refreshToken = null;
+            await AuthUserService.logoutAll(refreshToken);
+            return res.status(200).json({
+                status: 200,
+                message: 'users successfully logged out of the system',
+            });
+        } else {
+            await AuthUserService.logout(req.session.user['_id']);
+            delete req.session.user;
+            return res.status(200).json({
+                status: 200,
+                message: 'user successfully logged out of the system',
+            });
+        }
     } catch (error) {
-        req.flash('error', { message: defaultError });
-        return next(error);
+        return res.status(500).json({
+            status: 500,
+            message: error.message,
+        });
     }
 }
 
