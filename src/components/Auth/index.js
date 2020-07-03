@@ -70,7 +70,7 @@ async function createUser(req, res, next) {
 }
 
 /**
- * @function
+ * @function signin
  * @param {express.Request} req
  * @param {express.Response} res
  * @param {express.NextFunction} next
@@ -130,6 +130,13 @@ async function signin(req, res, next) {
     }
 }
 
+/**
+ * @function info
+ * @param {express.Request} req
+ * @param {express.Response} res
+ * @returns {Promise<void>}
+ */
+
 async function info(req, res) {
     if (req.session.user) {
         let id = req.session.user._id;
@@ -147,7 +154,7 @@ async function info(req, res) {
 }
 
 /**
- * @function
+ * @function logout
  * @param {express.Request} req
  * @param {express.Response} res
  * @param {express.NextFunction} next
@@ -179,35 +186,12 @@ async function logout(req, res) {
 }
 
 /**
- * @function
+ * @function latency
  * @param {express.Request} req
  * @param {express.Response} res
  * @param {express.NextFunction} next
  * @returns {Promise<void>}
  */
-async function deleteById(req, res, next) {
-    try {
-        const { error } = AuthUserValidation.deleteById(req.body);
-
-        if (error) {
-            throw new ValidationError(error.details);
-        }
-
-        await AuthUserService.deleteById(req.body.id);
-
-        return res.status(200);
-    } catch (error) {
-        if (error instanceof ValidationError) {
-            req.flash('error', error.message);
-            return res.status(401);
-        }
-        if (error.name === 'MongoError') {
-            console.log(req.flash('error', { message: defaultError }));
-            return res.status(500);
-        }
-        return next(error);
-    }
-}
 
 async function latency(req, res) {
     try {
@@ -241,7 +225,6 @@ module.exports = {
     logout,
     signin,
     getJWTTokens,
-    deleteById,
     info,
     latency,
 };

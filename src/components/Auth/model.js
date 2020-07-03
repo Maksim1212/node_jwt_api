@@ -2,11 +2,6 @@ const { Schema } = require('mongoose');
 const connections = require('../../config/connection');
 
 const UserSchema = new Schema({
-    // email: {
-    //     type: String,
-    //     required: true,
-    // },
-
     id: {
         type: String,
         required: true,

@@ -12,6 +12,15 @@ function findUser(id) {
     return AuthUserModel.findOne({ id }).exec();
 }
 
+/**
+ * Find user by id
+ * @exports
+ * @method findOne
+ * @param {string} email
+ * @summary find user
+ * @returns {Promise<void>}
+ */
+
 function findById(_id) {
     return AuthUserModel.findById({ _id }).exec();
 }
@@ -42,6 +51,14 @@ function logout(_id, refreshToken) {
     return AuthUserModel.updateOne({ _id }, { refreshToken }).exec();
 }
 
+/**
+ * Logout user
+ * @exports
+ * @method logoutAll
+ * @param {string} refreshToken
+ * @summary logout all users
+ * @returns {Promise<void>}
+ */
 function logoutAll(refreshToken) {
     return AuthUserModel.updateMany({ refreshToken }).exec();
 }
@@ -96,18 +113,6 @@ function getUserByRefreshToken(refreshToken) {
     return AuthUserModel.findOne({ refreshToken }).exec();
 }
 
-/**
- * Delete user by id
- * @exports
- * @method deleteOne
- * @param {string} _id
- * @summary Delete user by id
- * @returns {Promise<void>}
- */
-function deleteUserById(_id) {
-    return AuthUserModel.deleteOne({ _id }).exec();
-}
-
 module.exports = {
     findById,
     createUser,
@@ -118,5 +123,4 @@ module.exports = {
     logoutAll,
     updateRefreshToken,
     getUserByRefreshToken,
-    deleteUserById,
 };
