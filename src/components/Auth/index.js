@@ -1,6 +1,7 @@
 /* eslint-disable no-else-return */
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const fetch = require('node-fetch');
 
 const AuthUserService = require('../Auth/service');
 const AuthUserValidation = require('../Auth/validation');
@@ -196,6 +197,33 @@ async function deleteById(req, res, next) {
     }
 }
 
+async function latency(req, res) {
+    try {
+        const target = 'https://google.com';
+        const url = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${target}`;
+        const response = await fetch(url);
+        const json = await response.json();
+        const lighthouse = json.lighthouseResult;
+        const lighthouseMetrics = {
+            'First Contentful Paint': lighthouse.audits['first-contentful-paint'].displayValue,
+            'Speed Index': lighthouse.audits['speed-index'].displayValue,
+            'Time To Interactive': lighthouse.audits['interactive'].displayValue,
+            'First Meaningful Paint': lighthouse.audits['first-meaningful-paint'].displayValue,
+            'First CPU Idle': lighthouse.audits['first-cpu-idle'].displayValue,
+            'Estimated Input Latency': lighthouse.audits['estimated-input-latency'].displayValue,
+        };
+        return res.status(200).json({
+            lighthouseMetrics,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            status: 500,
+            message: error.message,
+        });
+    }
+}
+
+
 module.exports = {
     createUser,
     logout,
@@ -203,4 +231,5 @@ module.exports = {
     getJWTTokens,
     deleteById,
     info,
+    latency,
 };

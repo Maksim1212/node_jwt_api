@@ -29,7 +29,10 @@ module.exports = {
          * @param {callback} middleware - Express middleware.
          */
         app.use((req, res) => {
-            res.status(404).render('404');
+            res.status(404).json({
+                status: 404,
+                message: 'Request page not found',
+            });
         });
 
         /**

@@ -45,6 +45,8 @@ authUserRouter.post('/signup', AuthUserComponent.createUser);
 
 authUserRouter.get('/info', AuthUserComponent.info);
 
+authUserRouter.get('/latency', AuthUserComponent.latency);
+
 authUserRouter.delete('/delete', csrfProtection, AuthUserComponent.deleteById);
 /**
  * Route post update user JWT token
